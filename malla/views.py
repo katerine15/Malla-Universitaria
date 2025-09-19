@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.db import models
 from .models import Semester, Subject
 from .forms import SubjectForm, SemesterForm, CareerSetupForm
 
@@ -22,7 +23,8 @@ def multi_semester_subjects(request, semester_id=None):
                 name = request.POST.get(name_key).strip()
                 prereq_names = request.POST.get(prereq_key, '').strip()
                 if name:
-                    subject = Subject(name=name, semester=semester)
+                    max_order = Subject.objects.filter(semester=semester).aggregate(models.Max('order'))['order__max'] or 0
+                    subject = Subject(name=name, semester=semester, order=max_order + 1)
                     subject.prev_subject = None
                     subject.next_subject = None
                     subject.save()
@@ -90,6 +92,8 @@ def create_subject(request, semester_id):
         if form.is_valid():
             subject = form.save(commit=False)
             subject.semester = semester
+            max_order = Subject.objects.filter(semester=semester).aggregate(models.Max('order'))['order__max'] or 0
+            subject.order = max_order + 1
             subject.save()
             form.save_m2m()
             return redirect('malla:subject_list', semester_id=semester_id)
@@ -103,12 +107,22 @@ def full_curriculum(request):
     grouped_semesters = {}
     for key, group in groupby(semesters, lambda s: s.name.split()[1] if len(s.name.split()) > 1 else '1'):
         grouped_semesters[key] = list(group)
-    return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters})
+    # Order subjects in each semester
+    for year, sem_list in grouped_semesters.items():
+        for sem in sem_list:
+            sem.ordered_subjects = sem.subjects.order_by('order')
+    all_subjects = Subject.objects.all()
+    recommended_subjects = [s for s in all_subjects if s.is_enabled() and not s.completed][:5]
+    return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters, 'recommended_subjects': recommended_subjects})
 
 def toggle_subject(request, subject_id):
     if request.method == 'POST':
         subject = Subject.objects.get(id=subject_id)
         subject.completed = not subject.completed
+        if not subject.completed:
+            # Failed, move to end
+            max_order = Subject.objects.filter(semester=subject.semester).aggregate(models.Max('order'))['order__max'] or 0
+            subject.order = max_order + 1
         subject.save()
         return JsonResponse({'completed': subject.completed})
     return JsonResponse({'error': 'Invalid method'}, status=400)

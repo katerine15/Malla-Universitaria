@@ -17,6 +17,21 @@
     </div>
 </div>
 
+{% if recommended_subjects %}
+<div class="container my-4">
+    <h3 class="text-purple">Recomendaciones</h3>
+    <div class="d-flex flex-wrap gap-2">
+        {% for subject in recommended_subjects %}
+        <div class="subject-box recommended {% if subject.completed %}completed{% elif not subject.is_enabled %}disabled{% endif %}" 
+             data-subject-id="{{ subject.id }}" 
+             onclick="toggleSubject(this.dataset.subjectId, this)">
+            <strong>{{ subject.name }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% if grouped_semesters %}
 <div class="d-flex flex-wrap my-5">
     {% for year, semesters in grouped_semesters.items %}
@@ -36,7 +51,7 @@
                         {{ semester.name }}
                     </div>
                     <div class="card-body d-flex flex-column gap-2" style="overflow-y: scroll;">
-                        {% for subject in semester.subjects.all %}
+                            {% for subject in semester.ordered_subjects %}
                         <div class="subject-box {% if subject.completed %}completed{% elif not subject.is_enabled %}disabled{% endif %}" 
                              data-subject-id="{{ subject.id }}" 
                              onclick="toggleSubject(this.dataset.subjectId, this)">
@@ -95,6 +110,10 @@
         background-color: #d3c0e8;
         color: #a69dbd;
         cursor: not-allowed;
+    }
+    .subject-box.recommended {
+        border: 2px solid #7b5fff;
+        background-color: #e0d7ff;
     }
 </style>
 

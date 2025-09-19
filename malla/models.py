@@ -15,6 +15,7 @@ class Subject(models.Model):
     next_subject = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='prev_subject_rel')
     prerequisites = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='required_for')
     completed = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
