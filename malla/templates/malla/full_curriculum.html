@@ -37,7 +37,7 @@
 {% endif %}
 
 {% if grouped_semesters %}
-<div class="d-flex flex-wrap my-5">
+<div class="d-flex flex-wrap mx-auto" style="justify-content: center;">
     {% for year, semesters in grouped_semesters.items %}
     <div class="mb-5 p-2">
         <!-- Cabecera de Año -->
@@ -47,7 +47,7 @@
         </h2>
 
         <!-- Contenedor de Semestres -->
-        <div class="d-flex flex-wrap bg-beige rounded-bottom" style="min-height: 25rem;">
+        <div class="d-flex flex-wrap bg-beige rounded-bottom" style="min-height: 25rem; margin: auto;">
             {% for semester in semesters %}
             <div class="mb-4 p-2">
                 <div class="card shadow-sm rounded h-100 w-75">
