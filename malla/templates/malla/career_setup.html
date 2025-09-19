@@ -7,6 +7,14 @@
 <form method="post" class="mb-3">
     {% csrf_token %}
     <div class="mb-3">
+        <label for="{{ form.career_name.id_for_label }}" class="form-label">Nombre de la Carrera</label>
+        {{ form.career_name }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.university_name.id_for_label }}" class="form-label">Nombre de la Universidad</label>
+        {{ form.university_name }}
+    </div>
+    <div class="mb-3">
         <label for="{{ form.career_years.id_for_label }}" class="form-label">Duración de la Carrera (años)</label>
         {{ form.career_years }}
     </div>
