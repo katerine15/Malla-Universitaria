@@ -1,0 +1,23 @@
+{% extends 'malla/base.html' %}
+
+{% block title %}Configuración Carrera{% endblock %}
+
+{% block content %}
+<h1>Configuración Carrera</h1>
+<form method="post" class="mb-3">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="{{ form.career_years.id_for_label }}" class="form-label">Duración de la Carrera (años)</label>
+        {{ form.career_years }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.semesters_per_year.id_for_label }}" class="form-label">Semestres por Año</label>
+        {{ form.semesters_per_year }}
+    </div>
+    <button type="submit" class="btn btn-primary">Crear Semestres</button>
+</form>
+<div class="alert alert-info mt-4" role="alert">
+    Bienvenido, <strong>Usuario</strong>! Aquí puedes configurar la duración y estructura de tu carrera.
+</div>
+<a href="{% url 'malla:semester_list' %}" class="btn btn-link">Volver a Semestres</a>
+{% endblock %}

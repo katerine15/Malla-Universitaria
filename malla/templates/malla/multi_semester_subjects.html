@@ -1,0 +1,59 @@
+{% extends 'malla/base.html' %}
+
+{% block title %}Add Subjects to Semesters{% endblock %}
+
+{% block content %}
+<h1>Add Subjects to Semesters</h1>
+
+<form method="post" id="multi-semester-form">
+    {% csrf_token %}
+    <div class="accordion" id="semesterAccordion">
+        {% for semester in semesters %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ semester.id }}">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ semester.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ semester.id }}">
+                    {{ semester.name }}
+                </button>
+            </h2>
+            <div id="collapse{{ semester.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ semester.id }}" data-bs-parent="#semesterAccordion">
+                <div class="accordion-body">
+                    <div id="subjects-container-{{ semester.id }}">
+                        <!-- Existing subject forms will be inserted here -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-semester-id="{{ semester.id }}" onclick="addSubjectForm(this.dataset.semesterId)">Add Subject</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-success mt-3">Save All Subjects</button>
+</form>
+
+<script>
+    var formsPerSemester = {};
+
+    function addSubjectForm(semesterId) {
+        if (!formsPerSemester[semesterId]) {
+            formsPerSemester[semesterId] = 0;
+        }
+        var index = formsPerSemester[semesterId]++;
+        var container = document.getElementById('subjects-container-' + semesterId);
+
+        var formHtml = ''
+            + '<div class="card mb-2 p-2 border">'
+            + '    <div class="mb-2">'
+            + '        <label for="id_semester_' + semesterId + '_name_' + index + '" class="form-label">Subject Name</label>'
+            + '        <input type="text" name="semester_' + semesterId + '_name_' + index + '" id="id_semester_' + semesterId + '_name_' + index + '" class="form-control" required>'
+            + '    </div>'
+            + '    <div class="mb-2">'
+            + '        <label for="id_semester_' + semesterId + '_prerequisites_' + index + '" class="form-label">Prerequisites (comma separated)</label>'
+            + '        <input type="text" name="semester_' + semesterId + '_prerequisites_' + index + '" id="id_semester_' + semesterId + '_prerequisites_' + index + '" class="form-control" placeholder="Enter prerequisite subject names">'
+            + '    </div>'
+            + '    <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove Subject</button>'
+            + '</div>';
+        container.insertAdjacentHTML('beforeend', formHtml);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

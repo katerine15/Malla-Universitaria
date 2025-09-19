@@ -1,0 +1,21 @@
+{% extends 'malla/base.html' %}
+
+{% block title %}Materias para {{ semester.name }}{% endblock %}
+
+{% block content %}
+<h1>Materias para {{ semester.name }}</h1>
+<a href="{% url 'malla:create_subject' semester.id %}" class="btn btn-success mb-3">Agregar Nueva Materia</a>
+{% if subjects %}
+<ul class="list-group">
+    {% for subject in subjects %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ subject.name }}
+        <span class="badge bg-secondary rounded-pill">{{ subject.prerequisites.count }} prerrequisitos</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No hay materias disponibles para este semestre.</p>
+{% endif %}
+<a href="{% url 'malla:semester_list' %}" class="btn btn-link mt-3">Volver a Semestres</a>
+{% endblock %}

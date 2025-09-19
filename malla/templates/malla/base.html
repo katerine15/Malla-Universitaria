@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Malla Universitaria{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-light p-3 min-vh-100">
+            <h5 class="text-center mb-4">Menú</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:career_setup' %}"><i class="bi bi-gear me-2"></i>Configurar Carrera</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:semester_list' %}"><i class="bi bi-list me-2"></i>Lista de Semestres</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:create_semester' %}"><i class="bi bi-plus-circle me-2"></i>Crear Semestre</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:multi_semester_subjects' %}"><i class="bi bi-book me-2"></i>Agregar Materias</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:full_curriculum' %}"><i class="bi bi-diagram-3 me-2"></i>Malla Completa</a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-10">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="{% url 'malla:semester_list' %}">Malla Universitaria</a>
+                </div>
+            </nav>
+            <div class="container">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
