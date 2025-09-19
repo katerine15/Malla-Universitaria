@@ -47,11 +47,11 @@
         </h2>
 
         <!-- Contenedor de Semestres -->
-        <div class="d-flex flex-wrap bg-beige rounded-bottom p-2" style="min-height: 25rem;">
+        <div class="d-flex flex-wrap bg-beige rounded-bottom" style="min-height: 25rem;">
             {% for semester in semesters %}
-            <div class="col-md-6 col-lg-4 mb-4 w-auto p-2">
-                <div class="card shadow-sm rounded h-100">
-                    <div class="card-header bg-purple text-white text-center" style="border-radius: 15px 15px 0 0;">
+            <div class="mb-4 p-2">
+                <div class="card shadow-sm rounded h-100 w-75">
+                    <div class="card-header bg-purple text-white text-center">
                         {{ semester.name }}
                     </div>
                     <div class="card-body d-flex flex-column gap-2" style="overflow-y: scroll;">
