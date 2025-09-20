@@ -83,10 +83,12 @@ def career_setup(request):
             career.save()
             years = form.cleaned_data['career_years']
             semesters_per_year = form.cleaned_data['semesters_per_year']
-            # Crear semestres según años y semestres por año
+            # Crear semestres según años y semestres por año (con numeración consecutiva)
             for year in range(1, years + 1):
                 for sem in range(1, semesters_per_year + 1):
-                    Semester.objects.create(name=f'Year {year} Semester {sem}')
+                    # Calcular el número de semestre global consecutivo
+                    global_semester_number = (year - 1) * semesters_per_year + sem
+                    Semester.objects.create(name=f'Year {year} Semester {global_semester_number}')
             # Redirigir al primer semestre creado
             first_semester = Semester.objects.order_by('id').first()
             return redirect('malla:multi_semester_subjects_single', semester_id=first_semester.id)
