@@ -1,9 +1,14 @@
+"""
+URLs para la aplicación Malla con autenticación y permisos de administrador
+"""
 from django.urls import path
 from . import views
 
 app_name = 'malla'
 
 urlpatterns = [
+    path('login/', views.login, name="login"),
+    path('logout/', views.logoutSession, name="logout"),
     path('career-setup/', views.career_setup, name='career_setup'),
     path('semesters/', views.semester_list, name='semester_list'),
     path('semesters/create/', views.create_semester, name='create_semester'),

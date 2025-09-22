@@ -6,6 +6,23 @@ from django.db import models
 from .models import Semester, Subject
 from .forms import SubjectForm, SemesterForm, CareerSetupForm
 
+# Vista del inicio de sesión
+def login(request):
+
+    if request.POST:
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        if username == "admin@gmail.com" and password == "12345":
+            request.session['isSuperUser'] = True
+            return redirect("/malla/full-curriculum/")
+        
+    return render(request, "malla/login.html", { 'login': True })
+
+def logoutSession(request):
+    request.session.pop("isSuperUser")
+    return redirect(request, "/malla/login.html")
+
 # Vista para manejar materias en múltiples semestres
 def multi_semester_subjects(request, semester_id=None):
     # Si se especifica un semestre, se trabaja solo con ese semestre
@@ -138,6 +155,7 @@ def create_subject(request, semester_id):
 
 # Vista para mostrar la malla completa con materias ordenadas y recomendaciones
 def full_curriculum(request):
+    isSuperUser = request.session.get("isSuperUser")
     from .models import Career
     career = Career.objects.first()
     # Obtener todos los semestres ordenados por id
@@ -153,7 +171,7 @@ def full_curriculum(request):
     # Filtrar materias habilitadas y no completadas, limitar a 5 recomendaciones
     recommended_subjects = [s for s in all_subjects if s.is_enabled() and not s.completed][:5]
     # Renderizar plantilla con semestres agrupados, recomendaciones y carrera
-    return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters, 'recommended_subjects': recommended_subjects, 'career': career})
+    return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters, 'recommended_subjects': recommended_subjects, 'career': career, 'isSuperUser': isSuperUser})
 
 # Vista para alternar el estado de completado de una materia (activar/desactivar)
 def toggle_subject(request, subject_id):
