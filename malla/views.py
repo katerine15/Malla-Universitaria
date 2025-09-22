@@ -1,5 +1,5 @@
 # Importaciones necesarias para las vistas y manejo de formularios
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import models
@@ -20,11 +20,13 @@ def login(request):
     return render(request, "malla/login.html", { 'login': True })
 
 def logoutSession(request):
-    request.session.pop("isSuperUser")
-    return redirect(request, "/malla/login.html")
+    if request.method == 'POST':
+        request.session.flush()
+        return redirect("malla:login")
 
 # Vista para manejar materias en múltiples semestres
 def multi_semester_subjects(request, semester_id=None):
+    isSuperUser = request.session.get("isSuperUser")
     # Si se especifica un semestre, se trabaja solo con ese semestre
     if semester_id:
         semesters = [Semester.objects.get(id=semester_id)]
@@ -86,10 +88,12 @@ def multi_semester_subjects(request, semester_id=None):
             'semesters': semesters,
             'forms_per_semester': forms_per_semester,
             'single_semester': single_semester,
+            'isSuperUser': isSuperUser
         })
 
 # Vista para configurar la carrera (años y semestres)
 def career_setup(request):
+    isSuperUser = request.session.get("isSuperUser")
     from .models import Career
     career, created = Career.objects.get_or_create(id=1)
     if request.method == 'POST':
@@ -110,16 +114,18 @@ def career_setup(request):
             first_semester = Semester.objects.order_by('id').first()
             return redirect('malla:multi_semester_subjects_single', semester_id=first_semester.id)
     else:
-        form = CareerSetupForm(initial={'career_name': career.name, 'university_name': career.university})
-    return render(request, 'malla/career_setup.html', {'form': form})
+        form = CareerSetupForm(initial={'career_name': career.name, 'university_name': career.university, 'isSuperUser': isSuperUser})
+    return render(request, 'malla/career_setup.html', {'form': form, 'isSuperUser': isSuperUser})
 
 # Vista para listar todos los semestres
 def semester_list(request):
+    isSuperUser = request.session.get("isSuperUser")
     semesters = Semester.objects.all()
-    return render(request, 'malla/semester_list.html', {'semesters': semesters})
+    return render(request, 'malla/semester_list.html', {'semesters': semesters, 'isSuperUser': isSuperUser})
 
 # Vista para crear un nuevo semestre
 def create_semester(request):
+    isSuperUser = request.session.get("isSuperUser")
     if request.method == 'POST':
         form = SemesterForm(request.POST)
         if form.is_valid():
@@ -127,16 +133,18 @@ def create_semester(request):
             return redirect('malla:semester_list')
     else:
         form = SemesterForm()
-    return render(request, 'malla/create_semester.html', {'form': form})
+    return render(request, 'malla/create_semester.html', {'form': form, 'isSuperUser': isSuperUser})
 
 # Vista para listar materias de un semestre específico
 def subject_list(request, semester_id):
+    isSuperUser = request.session.get("isSuperUser")
     semester = Semester.objects.get(id=semester_id)
     subjects = Subject.objects.filter(semester=semester)
-    return render(request, 'malla/subject_list.html', {'semester': semester, 'subjects': subjects})
+    return render(request, 'malla/subject_list.html', {'semester': semester, 'subjects': subjects,'isSuperUser': isSuperUser})
 
 # Vista para crear una materia en un semestre específico
 def create_subject(request, semester_id):
+    isSuperUser = request.session.get("isSuperUser")
     semester = Semester.objects.get(id=semester_id)
     if request.method == 'POST':
         form = SubjectForm(request.POST, semester=semester)
@@ -151,7 +159,7 @@ def create_subject(request, semester_id):
             return redirect('malla:subject_list', semester_id=semester_id)
     else:
         form = SubjectForm(semester=semester)
-    return render(request, 'malla/create_subject.html', {'form': form, 'semester': semester})
+    return render(request, 'malla/create_subject.html', {'form': form, 'semester': semester, 'isSuperUser': isSuperUser})
 
 # Vista para mostrar la malla completa con materias ordenadas y recomendaciones
 def full_curriculum(request):

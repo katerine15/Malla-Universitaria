@@ -9,7 +9,6 @@
 <body>
 <div class="container-fluid">
     <div class="row">
-        {% if not login %}
         <div class="col-md-2 bg-light p-3 min-vh-100">
             <h5 class="text-center mb-4">Menú</h5>
             <ul class="nav flex-column">
@@ -30,13 +29,24 @@
                 <li class="nav-item mb-2">
                     <a class="nav-link" href="{% url 'malla:full_curriculum' %}"><i class="bi bi-diagram-3 me-2"></i>Malla Completa</a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'logoutSession' %}">Cerrar sesión</a>
-                </li>
+                {% if login %}
+                    <li class="nav-item mb-2">
+                        <form method="post" action="{% url 'malla:login' %}">
+                            {% csrf_token %}
+                            <button class="nav-link" type="submit">Iniciar sesión</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="nav-item mb-2">
+                        <form method="post" action="{% url 'malla:logout' %}">
+                            {% csrf_token %}
+                            <button class="nav-link" type="submit">Cerrar sesión</button>
+                        </form>
+                    </li>
+                {% endif %}
             </ul>
         </div>
-        {% endif %}
-        <div class="col-md-10" style="width: auto">
+        <div class="col-md-10">
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="{% url 'malla:semester_list' %}">Malla Universitaria</a>
