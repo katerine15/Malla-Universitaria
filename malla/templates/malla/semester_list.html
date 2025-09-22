@@ -5,7 +5,9 @@
 {% block content %}
 <h1>Semestres</h1>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <a href="{% url 'malla:create_semester' %}" class="btn btn-success">Crear Nuevo Semestre</a>
+    {% if isSuperUser %}
+        <a href="{% url 'malla:create_semester' %}" class="btn btn-success">Crear Nuevo Semestre</a>
+    {% endif %}
     <a href="{% url 'malla:full_curriculum' %}" class="btn btn-primary">Ver Malla Completa</a>
 </div>
 

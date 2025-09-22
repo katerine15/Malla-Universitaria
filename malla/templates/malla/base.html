@@ -13,23 +13,23 @@
             <h5 class="text-center mb-4">Menú</h5>
             <ul class="nav flex-column">
                 <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'malla:career_setup' %}"><i class="bi bi-gear me-2"></i>Configurar Carrera</a>
-                </li>
-                <li class="nav-item mb-2">
                     <a class="nav-link" href="{% url 'malla:semester_list' %}"><i class="bi bi-list me-2"></i>Lista de Semestres</a>
-                </li>
-                {% if isSuperUser %}
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'malla:create_semester' %}"><i class="bi bi-plus-circle me-2"></i>Crear Semestre</a>
-                </li>
-                {% endif %}
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'malla:multi_semester_subjects' %}"><i class="bi bi-book me-2"></i>Agregar Materias</a>
                 </li>
                 <li class="nav-item mb-2">
                     <a class="nav-link" href="{% url 'malla:full_curriculum' %}"><i class="bi bi-diagram-3 me-2"></i>Malla Completa</a>
                 </li>
-                {% if login %}
+                {% if isSuperUser %}
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:career_setup' %}"><i class="bi bi-gear me-2"></i>Configurar Carrera</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:create_semester' %}"><i class="bi bi-plus-circle me-2"></i>Crear Semestre</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'malla:multi_semester_subjects' %}"><i class="bi bi-book me-2"></i>Agregar Materias</a>
+                </li>
+                {% endif %}
+                {% if not isLogged %}
                     <li class="nav-item mb-2">
                         <form method="post" action="{% url 'malla:login' %}">
                             {% csrf_token %}
