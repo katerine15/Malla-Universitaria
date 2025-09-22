@@ -97,6 +97,10 @@ def multi_semester_subjects(request, semester_id=None):
 def career_setup(request):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
+
+    if not isLogged:
+        return redirect("/malla/login")
+
     from .models import Career
     career, created = Career.objects.get_or_create(id=1)
     if request.method == 'POST':
@@ -131,6 +135,10 @@ def semester_list(request):
 def create_semester(request):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
+
+    if not isLogged:
+        return redirect("/malla/login")
+    
     if request.method == 'POST':
         form = SemesterForm(request.POST)
         if form.is_valid():
@@ -152,6 +160,10 @@ def subject_list(request, semester_id):
 def create_subject(request, semester_id):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
+    
+    if not isLogged:
+        return redirect("/malla/login")
+
     semester = Semester.objects.get(id=semester_id)
     if request.method == 'POST':
         form = SubjectForm(request.POST, semester=semester)
