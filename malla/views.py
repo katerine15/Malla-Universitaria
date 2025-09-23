@@ -4,8 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import models
 from django.contrib import messages
-from .models import Semester, Subject, Student
-from .forms import SubjectForm, SemesterForm, CareerSetupForm, StudentLoginForm, StudentRegistrationForm
+from .models import Semester, Subject, Student, Career
+from .forms import SubjectForm, SemesterForm, CareerCreateForm, StudentLoginForm, StudentRegistrationForm
 from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Vista del inicio de sesión
@@ -60,18 +60,24 @@ def student_register(request):
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
             codigo = form.cleaned_data['codigo']
-            # Crear el nuevo estudiante
-            Student.objects.create(codigo=codigo)
+            career = form.cleaned_data['career']
+            # Crear el nuevo estudiante con la carrera seleccionada
+            Student.objects.create(codigo=codigo, career=career)
             # Mensaje de éxito
-            messages.success(request, f'¡Registro exitoso! Ya puedes iniciar sesión con el código {codigo}')
+            messages.success(request, f'¡Registro exitoso! Ya puedes iniciar sesión con el código {codigo} para la carrera {career.name}')
             return redirect('malla:login')
         else:
             # Si hay errores en el formulario, mostrarlos
             if form.errors.get('codigo'):
                 context['registration_errors'] = form.errors['codigo'][0]
+            elif form.errors.get('career'):
+                context['registration_errors'] = form.errors['career'][0]
             else:
                 context['registration_errors'] = 'Error en el formulario.'
+    else:
+        form = StudentRegistrationForm()
     
+    context['form'] = form
     return render(request, "malla/student_register.html", context)
 
 def logoutSession(request):
@@ -149,36 +155,43 @@ def multi_semester_subjects(request, semester_id=None):
             'isSuperUser': isSuperUser, 'isLogged': isLogged
         })
 
-# Vista para configurar la carrera (años y semestres)
+# Vista para crear carreras (solo administradores)
 def career_setup(request):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
 
-    if not isLogged:
+    if not isLogged or not isSuperUser:
         return redirect("/malla/login")
 
-    from .models import Career
-    career, created = Career.objects.get_or_create(id=1)
+    # Obtener todas las carreras existentes
+    careers = Career.objects.all()
+    
     if request.method == 'POST':
-        form = CareerSetupForm(request.POST)
+        form = CareerCreateForm(request.POST)
         if form.is_valid():
-            career.name = form.cleaned_data['career_name']
-            career.university = form.cleaned_data['university_name']
-            career.save()
+            # Crear la nueva carrera
+            career = form.save()
             years = form.cleaned_data['career_years']
             semesters_per_year = form.cleaned_data['semesters_per_year']
+            
             # Crear semestres según años y semestres por año (con numeración consecutiva)
             for year in range(1, years + 1):
                 for sem in range(1, semesters_per_year + 1):
                     # Calcular el número de semestre global consecutivo
                     global_semester_number = (year - 1) * semesters_per_year + sem
                     Semester.objects.create(name=f'Year {year} Semester {global_semester_number}')
-            # Redirigir al primer semestre creado
-            first_semester = Semester.objects.order_by('id').first()
-            return redirect('malla:multi_semester_subjects_single', semester_id=first_semester.id)
+            
+            messages.success(request, f'¡Carrera "{career.name}" creada exitosamente con {years} años y {semesters_per_year} semestres por año!')
+            return redirect('malla:career_setup')
     else:
-        form = CareerSetupForm(initial={'career_name': career.name, 'university_name': career.university, 'isSuperUser': isSuperUser, 'isLogged': isLogged})
-    return render(request, 'malla/career_setup.html', {'form': form, 'isSuperUser': isSuperUser, 'isLogged': isLogged})
+        form = CareerCreateForm()
+    
+    return render(request, 'malla/career_setup.html', {
+        'form': form, 
+        'careers': careers,
+        'isSuperUser': isSuperUser, 
+        'isLogged': isLogged
+    })
 
 # Vista para listar todos los semestres
 def semester_list(request):
@@ -242,8 +255,21 @@ def create_subject(request, semester_id):
 def full_curriculum(request):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
-    from .models import Career
-    career = Career.objects.first()
+    userType = request.session.get("userType")
+    
+    # Determinar qué carrera mostrar según el tipo de usuario
+    if userType == 'student':
+        # Si es estudiante, obtener su carrera específica
+        studentId = request.session.get("studentId")
+        try:
+            student = Student.objects.get(id=studentId)
+            career = student.career if student.career else Career.objects.first()
+        except Student.DoesNotExist:
+            career = Career.objects.first()
+    else:
+        # Si es admin o no hay tipo específico, mostrar la primera carrera
+        career = Career.objects.first()
+    
     # Obtener todos los semestres ordenados por id usando lista doblemente enlazada
     semesters = Semester.lista_objects.ordenados_por_id_as_lista()
     from itertools import groupby

@@ -1,3 +1,4 @@
+
 # Importaciones necesarias para definir modelos en Django
 from django.db import models
 from .managers import CareerListaManager, SemesterListaManager, SubjectListaManager
@@ -5,11 +6,12 @@ from .managers import CareerListaManager, SemesterListaManager, SubjectListaMana
 # Modelo para almacenar la información de la carrera universitaria
 class Career(models.Model):
     """
-    Modelo para almacenar la información de la carrera universitaria.
-    Se asume que solo hay una carrera por aplicación.
+    Modelo para almacenar la información de las carreras universitarias.
+    Los administradores pueden crear múltiples carreras.
     """
-    name = models.CharField(max_length=200, default='Ingeniería Informática', help_text='Nombre de la carrera')
-    university = models.CharField(max_length=200, default='Colegio Mayor del Cauca', help_text='Nombre de la universidad')
+    name = models.CharField(max_length=200, help_text='Nombre de la carrera')
+    university = models.CharField(max_length=200, help_text='Nombre de la universidad')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True, help_text='Fecha de creación de la carrera')
 
     # Managers
     objects = models.Manager()  # Manager por defecto
@@ -26,16 +28,17 @@ class Career(models.Model):
 class Student(models.Model):
     """
     Modelo para almacenar la información básica de los estudiantes.
-    Solo requiere un código para el login.
+    Solo requiere un código para el login y debe seleccionar una carrera.
     """
     codigo = models.CharField(max_length=20, unique=True, help_text='Código único del estudiante')
+    career = models.ForeignKey(Career, on_delete=models.CASCADE, related_name='students', null=True, blank=True, help_text='Carrera del estudiante')
     created_at = models.DateTimeField(auto_now_add=True, help_text='Fecha de creación del registro')
 
     # Managers
     objects = models.Manager()  # Manager por defecto
 
     def __str__(self):
-        return f"Estudiante {self.codigo}"
+        return f"Estudiante {self.codigo} - {self.career.name}"
 
     class Meta:
         verbose_name = 'Estudiante'

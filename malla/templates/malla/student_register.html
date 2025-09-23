@@ -46,6 +46,21 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="career" class="form-label">
+                                <i class="bi bi-mortarboard me-2"></i>Carrera
+                            </label>
+                            <select class="form-control" id="career" name="career" required>
+                                <option value="">Selecciona una carrera</option>
+                                {% for career in form.career.field.queryset %}
+                                    <option value="{{ career.id }}">{{ career.name }} - {{ career.university }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Selecciona la carrera que vas a estudiar
+                            </div>
+                        </div>
+
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-person-plus me-2"></i>Registrarse

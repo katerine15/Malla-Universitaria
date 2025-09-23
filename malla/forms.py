@@ -1,6 +1,6 @@
 # Importaciones necesarias para definir formularios en Django
 from django import forms
-from .models import Subject, Semester, Student
+from .models import Subject, Semester, Student, Career
 from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Formulario para crear o editar una materia
@@ -45,32 +45,32 @@ class SemesterForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
-# Formulario para configurar la carrera (duración y semestres por año)
-class CareerSetupForm(forms.Form):
-    # Campo para el nombre de la carrera
-    career_name = forms.CharField(
-        label='Nombre de la Carrera',
-        max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    # Campo para el nombre de la universidad
-    university_name = forms.CharField(
-        label='Nombre de la Universidad',
-        max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
+# Formulario para crear carreras (solo administradores)
+class CareerCreateForm(forms.ModelForm):
     # Campo para la duración de la carrera en años (mínimo 1)
     career_years = forms.IntegerField(
         label='Duración de la Carrera (años)',
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    # Campo para el número de semestres por año (mínimo 2)
+    # Campo para el número de semestres por año (mínimo 1)
     semesters_per_year = forms.IntegerField(
         label='Semestres por Año',
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+
+    class Meta:
+        model = Career
+        fields = ['name', 'university']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'university': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'name': 'Nombre de la Carrera',
+            'university': 'Nombre de la Universidad',
+        }
 
 # Formulario para login de estudiantes
 class StudentLoginForm(forms.Form):
@@ -105,6 +105,13 @@ class StudentRegistrationForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Ingresa tu código de estudiante'
         })
+    )
+    # Campo para seleccionar la carrera
+    career = forms.ModelChoiceField(
+        label='Carrera',
+        queryset=Career.objects.all(),
+        empty_label='Selecciona una carrera',
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     def clean_codigo(self):
