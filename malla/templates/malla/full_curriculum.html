@@ -61,7 +61,7 @@
                              onclick="toggleSubject(this.dataset.subjectId, this)">
                             <strong>{{ subject.name }}</strong>
                             {% if subject.prerequisites.all %}
-                            <small class="text-muted d-block">Req: {{ subject.prerequisites.all|join:", " }}</small>
+                                <small class="text-muted d-block">Req: {{ subject.prerequisites.all|join:", " }}</small>
                             {% endif %}
                         </div>
                         {% empty %}
