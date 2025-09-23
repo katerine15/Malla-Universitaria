@@ -1,6 +1,7 @@
 # Importaciones necesarias para definir formularios en Django
 from django import forms
 from .models import Subject, Semester
+from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Formulario para crear o editar una materia
 class SubjectForm(forms.ModelForm):
@@ -23,9 +24,12 @@ class SubjectForm(forms.ModelForm):
         if semester:
             # Limitar los prerrequisitos a materias del mismo semestre o anteriores
             # Esto evita que se seleccionen prerrequisitos de semestres futuros
-            allowed_subjects = Subject.objects.filter(
+            # Usar lista doblemente enlazada para obtener materias permitidas
+            allowed_subjects_lista = Subject.lista_objects.filter_as_lista(
                 semester__id__lte=semester.id
             )
+            # Convertir la lista doblemente enlazada a QuerySet para compatibilidad con el formulario
+            allowed_subjects = allowed_subjects_lista.to_queryset(Subject)
             # Asignar el queryset filtrado al campo de prerrequisitos
             self.fields['prerequisites'].queryset = allowed_subjects
 

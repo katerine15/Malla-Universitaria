@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.db import models
 from .models import Semester, Subject
 from .forms import SubjectForm, SemesterForm, CareerSetupForm
+from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Vista del inicio de sesión
 def login(request):
@@ -31,10 +32,12 @@ def multi_semester_subjects(request, semester_id=None):
     isLogged = request.session.get("isLogged")
     # Si se especifica un semestre, se trabaja solo con ese semestre
     if semester_id:
-        semesters = [Semester.objects.get(id=semester_id)]
+        semester_obj = Semester.objects.get(id=semester_id)
+        semesters = ListaDjangoDobleEnlace()
+        semesters.insertar_final(semester_obj)
     else:
-        # Si no, se obtienen todos los semestres ordenados por id
-        semesters = list(Semester.objects.order_by('id'))
+        # Si no, se obtienen todos los semestres ordenados por id usando lista doblemente enlazada
+        semesters = Semester.lista_objects.ordenados_por_id_as_lista()
     single_semester = len(semesters) == 1
 
     if request.method == 'POST':
@@ -74,7 +77,7 @@ def multi_semester_subjects(request, semester_id=None):
 
         # Si solo hay un semestre, redirigir al siguiente semestre o a la lista de semestres
         if single_semester:
-            current_semester = semesters[0]
+            current_semester = semesters.primero()
             next_semester = Semester.objects.filter(id__gt=current_semester.id).order_by('id').first()
             if next_semester:
                 return redirect('malla:multi_semester_subjects_single', semester_id=next_semester.id)
@@ -128,7 +131,8 @@ def career_setup(request):
 def semester_list(request):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
-    semesters = Semester.objects.all()
+    # Usar lista doblemente enlazada en lugar de QuerySet
+    semesters = Semester.lista_objects.all_as_lista()
     return render(request, 'malla/semester_list.html', {'semesters': semesters, 'isSuperUser': isSuperUser, 'isLogged': isLogged})
 
 # Vista para crear un nuevo semestre
@@ -153,7 +157,8 @@ def subject_list(request, semester_id):
     isSuperUser = request.session.get("isSuperUser")
     isLogged = request.session.get("isLogged")
     semester = Semester.objects.get(id=semester_id)
-    subjects = Subject.objects.filter(semester=semester)
+    # Usar lista doblemente enlazada para las materias
+    subjects = Subject.lista_objects.ordenadas_por_orden_as_lista(semester)
     return render(request, 'malla/subject_list.html', {'semester': semester, 'subjects': subjects,'isSuperUser': isSuperUser, 'isLogged': isLogged})
 
 # Vista para crear una materia en un semestre específico
@@ -186,18 +191,21 @@ def full_curriculum(request):
     isLogged = request.session.get("isLogged")
     from .models import Career
     career = Career.objects.first()
-    # Obtener todos los semestres ordenados por id
-    semesters = Semester.objects.all().order_by('id')
+    # Obtener todos los semestres ordenados por id usando lista doblemente enlazada
+    semesters = Semester.lista_objects.ordenados_por_id_as_lista()
     from itertools import groupby
     grouped_semesters = {}
     # Agrupar semestres por año (extraído del nombre)
-    for key, group in groupby(semesters, lambda s: s.name.split()[1] if len(s.name.split()) > 1 else '1'):
-        grouped_semesters[key] = list(group)
+    # Convertir a lista Python para usar groupby
+    semesters_list = semesters.to_list()
+    for key, group in groupby(semesters_list, lambda s: s.name.split()[1] if len(s.name.split()) > 1 else '1'):
+        # Convertir cada grupo a lista doblemente enlazada
+        grupo_lista = ListaDjangoDobleEnlace()
+        grupo_lista.from_list(list(group))
+        grouped_semesters[key] = grupo_lista
     # Las materias ya se ordenan en la propiedad ordered_subjects del modelo Semester
-    # Obtener todas las materias para calcular recomendaciones
-    all_subjects = Subject.objects.all()
-    # Filtrar materias habilitadas y no completadas, limitar a 5 recomendaciones
-    recommended_subjects = [s for s in all_subjects if s.is_enabled() and not s.completed][:5]
+    # Obtener materias recomendadas usando lista doblemente enlazada
+    recommended_subjects = Subject.lista_objects.recomendadas_as_lista(limite=5)
     # Renderizar plantilla con semestres agrupados, recomendaciones y carrera
     return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters, 'recommended_subjects': recommended_subjects, 'career': career, 'isSuperUser': isSuperUser, 'isLogged': isLogged})
 

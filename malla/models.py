@@ -1,5 +1,6 @@
 # Importaciones necesarias para definir modelos en Django
 from django.db import models
+from .managers import CareerListaManager, SemesterListaManager, SubjectListaManager
 
 # Modelo para almacenar la información de la carrera universitaria
 class Career(models.Model):
@@ -9,6 +10,10 @@ class Career(models.Model):
     """
     name = models.CharField(max_length=200, default='Ingeniería Informática', help_text='Nombre de la carrera')
     university = models.CharField(max_length=200, default='Colegio Mayor del Cauca', help_text='Nombre de la universidad')
+
+    # Managers
+    objects = models.Manager()  # Manager por defecto
+    lista_objects = CareerListaManager()  # Manager con listas doblemente enlazadas
 
     def __str__(self):
         return f"{self.name} - {self.university}"
@@ -26,6 +31,10 @@ class Semester(models.Model):
     # Relación con el semestre siguiente (opcional, se puede dejar vacío)
     next_semester = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='prev_semester_rel')
 
+    # Managers
+    objects = models.Manager()  # Manager por defecto
+    lista_objects = SemesterListaManager()  # Manager con listas doblemente enlazadas
+
     # Método para representar el objeto como cadena (usado en admin y depuración)
     def __str__(self):
         return self.name
@@ -36,6 +45,16 @@ class Semester(models.Model):
         Devuelve las materias del semestre ordenadas por el campo order.
         """
         return self.subjects.order_by('order')
+    
+    @property
+    def ordered_subjects_as_lista(self):
+        """
+        Devuelve las materias del semestre ordenadas como lista doblemente enlazada.
+        """
+        from .estructura.django_lista import ListaDjangoDobleEnlace
+        lista = ListaDjangoDobleEnlace()
+        materias_ordenadas = self.subjects.order_by('order')
+        return lista.from_queryset(materias_ordenadas)
 
 # Modelo para representar una materia en la malla curricular
 class Subject(models.Model):
@@ -53,6 +72,10 @@ class Subject(models.Model):
     completed = models.BooleanField(default=False)
     # Campo para ordenar las materias dentro del semestre (número entero positivo)
     order = models.PositiveIntegerField(default=0)
+
+    # Managers
+    objects = models.Manager()  # Manager por defecto
+    lista_objects = SubjectListaManager()  # Manager con listas doblemente enlazadas
 
     # Método para representar el objeto como cadena
     def __str__(self):
