@@ -11,12 +11,6 @@
                     <h3><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión</h3>
                 </div>
                 <div class="card-body">
-                    {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <strong>Error:</strong> Usuario o contraseña incorrectos.
-                        </div>
-                    {% endif %}
-
                     {% if messages %}
                         {% for message in messages %}
                             <div class="alert alert-{{ message.tags }}">
@@ -25,30 +19,91 @@
                         {% endfor %}
                     {% endif %}
 
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">
-                                <i class="bi bi-person me-2"></i>Usuario
+                    <!-- Selector de tipo de login -->
+                    <div class="mb-4">
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="loginType" id="adminLogin" value="admin" checked>
+                            <label class="btn btn-outline-primary" for="adminLogin">
+                                <i class="bi bi-shield-check me-2"></i>Administrativo
                             </label>
-                            <input type="text" class="form-control" id="{{ form.username.id_for_label }}"
-                                   name="username" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">
-                                <i class="bi bi-key me-2"></i>Contraseña
+                            
+                            <input type="radio" class="btn-check" name="loginType" id="studentLogin" value="student">
+                            <label class="btn btn-outline-primary" for="studentLogin">
+                                <i class="bi bi-person-badge me-2"></i>Estudiante
                             </label>
-                            <input type="password" class="form-control" id="{{ form.password.id_for_label }}"
-                                   name="password" required>
                         </div>
+                    </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-                            </button>
+                    <!-- Formulario de login administrativo -->
+                    <div id="adminForm">
+                        <form method="post" id="adminLoginForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="login_type" value="admin">
+                            
+                            {% if admin_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Error:</strong> Usuario o contraseña incorrectos.
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="bi bi-person me-2"></i>Usuario
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="bi bi-key me-2"></i>Contraseña
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión como Admin
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Formulario de login estudiante -->
+                    <div id="studentForm" style="display: none;">
+                        <form method="post" id="studentLoginForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="login_type" value="student">
+                            
+                            {% if student_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Error:</strong> {{ student_errors }}
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="codigo" class="form-label">
+                                    <i class="bi bi-person-badge me-2"></i>Código de Estudiante
+                                </label>
+                                <input type="text" class="form-control" id="codigo" name="codigo" 
+                                       placeholder="Ingresa tu código de estudiante" required>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión como Estudiante
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p class="mb-0 text-muted small">
+                                ¿No tienes cuenta? 
+                                <a href="{% url 'malla:student_register' %}" class="text-decoration-none">
+                                    <i class="bi bi-person-plus me-1"></i>Regístrate aquí
+                                </a>
+                            </p>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,9 +118,41 @@
     .card-header {
         border-radius: 15px 15px 0 0 !important;
     }
-    .btn-primary {
+    .btn-primary, .btn-success {
         border-radius: 25px;
         padding: 10px 30px;
     }
+    .btn-group .btn {
+        border-radius: 25px 0 0 25px;
+    }
+    .btn-group .btn:last-child {
+        border-radius: 0 25px 25px 0;
+    }
 </style>
+
+<script>
+    // JavaScript para alternar entre formularios
+    document.addEventListener('DOMContentLoaded', function() {
+        const adminRadio = document.getElementById('adminLogin');
+        const studentRadio = document.getElementById('studentLogin');
+        const adminForm = document.getElementById('adminForm');
+        const studentForm = document.getElementById('studentForm');
+
+        function toggleForms() {
+            if (adminRadio.checked) {
+                adminForm.style.display = 'block';
+                studentForm.style.display = 'none';
+            } else if (studentRadio.checked) {
+                adminForm.style.display = 'none';
+                studentForm.style.display = 'block';
+            }
+        }
+
+        adminRadio.addEventListener('change', toggleForms);
+        studentRadio.addEventListener('change', toggleForms);
+        
+        // Inicializar el estado
+        toggleForms();
+    });
+</script>
 {% endblock %}

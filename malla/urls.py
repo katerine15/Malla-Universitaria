@@ -8,6 +8,7 @@ app_name = 'malla'
 
 urlpatterns = [
     path('login/', views.login, name="login"),
+    path('student-register/', views.student_register, name="student_register"),
     path('logout/', views.logoutSession, name="logout"),
     path('career-setup/', views.career_setup, name='career_setup'),
     path('semesters/', views.semester_list, name='semester_list'),

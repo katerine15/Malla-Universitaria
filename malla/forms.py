@@ -1,6 +1,6 @@
 # Importaciones necesarias para definir formularios en Django
 from django import forms
-from .models import Subject, Semester
+from .models import Subject, Semester, Student
 from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Formulario para crear o editar una materia
@@ -71,3 +71,47 @@ class CareerSetupForm(forms.Form):
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+
+# Formulario para login de estudiantes
+class StudentLoginForm(forms.Form):
+    # Campo para el código del estudiante
+    codigo = forms.CharField(
+        label='Código de Estudiante',
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu código de estudiante'
+        })
+    )
+
+    def clean_codigo(self):
+        """
+        Validar que el código del estudiante existe en la base de datos
+        """
+        codigo = self.cleaned_data['codigo']
+        try:
+            Student.objects.get(codigo=codigo)
+        except Student.DoesNotExist:
+            raise forms.ValidationError('El código de estudiante no existe.')
+        return codigo
+
+# Formulario para registro de estudiantes
+class StudentRegistrationForm(forms.Form):
+    # Campo para el código del estudiante
+    codigo = forms.CharField(
+        label='Código de Estudiante',
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu código de estudiante'
+        })
+    )
+
+    def clean_codigo(self):
+        """
+        Validar que el código del estudiante no existe ya en la base de datos
+        """
+        codigo = self.cleaned_data['codigo']
+        if Student.objects.filter(codigo=codigo).exists():
+            raise forms.ValidationError('Este código de estudiante ya está registrado.')
+        return codigo

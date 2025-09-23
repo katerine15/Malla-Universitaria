@@ -22,6 +22,25 @@ class Career(models.Model):
         verbose_name = 'Carrera'
         verbose_name_plural = 'Carreras'
 
+# Modelo para representar un estudiante
+class Student(models.Model):
+    """
+    Modelo para almacenar la información básica de los estudiantes.
+    Solo requiere un código para el login.
+    """
+    codigo = models.CharField(max_length=20, unique=True, help_text='Código único del estudiante')
+    created_at = models.DateTimeField(auto_now_add=True, help_text='Fecha de creación del registro')
+
+    # Managers
+    objects = models.Manager()  # Manager por defecto
+
+    def __str__(self):
+        return f"Estudiante {self.codigo}"
+
+    class Meta:
+        verbose_name = 'Estudiante'
+        verbose_name_plural = 'Estudiantes'
+
 # Modelo para representar un semestre en la malla curricular
 class Semester(models.Model):
     # Nombre del semestre (ej: "Year 1 Semester 1")

@@ -3,23 +3,76 @@ from django.shortcuts import render, redirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import models
-from .models import Semester, Subject
-from .forms import SubjectForm, SemesterForm, CareerSetupForm
+from django.contrib import messages
+from .models import Semester, Subject, Student
+from .forms import SubjectForm, SemesterForm, CareerSetupForm, StudentLoginForm, StudentRegistrationForm
 from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Vista del inicio de sesión
 def login(request):
-
-    if request.POST:
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-
-        if username == "admin@gmail.com" and password == "12345":
-            request.session['isSuperUser'] = True
-            request.session['isLogged'] = True
-            return redirect("/malla/full-curriculum/")
+    context = {'login': True}
+    
+    if request.method == 'POST':
+        login_type = request.POST.get('login_type')
         
-    return render(request, "malla/login.html", { 'login': True })
+        if login_type == 'admin':
+            # Manejo del login administrativo
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+
+            if username == "admin@gmail.com" and password == "12345":
+                request.session['isSuperUser'] = True
+                request.session['isLogged'] = True
+                request.session['userType'] = 'admin'
+                return redirect("/malla/full-curriculum/")
+            else:
+                context['admin_errors'] = True
+                
+        elif login_type == 'student':
+            # Manejo del login de estudiante
+            form = StudentLoginForm(request.POST)
+            if form.is_valid():
+                codigo = form.cleaned_data['codigo']
+                try:
+                    student = Student.objects.get(codigo=codigo)
+                    request.session['isLogged'] = True
+                    request.session['isSuperUser'] = False
+                    request.session['userType'] = 'student'
+                    request.session['studentCode'] = codigo
+                    request.session['studentId'] = student.id
+                    return redirect("/malla/full-curriculum/")
+                except Student.DoesNotExist:
+                    context['student_errors'] = 'El código de estudiante no existe.'
+            else:
+                # Si hay errores en el formulario, mostrarlos
+                if form.errors.get('codigo'):
+                    context['student_errors'] = form.errors['codigo'][0]
+                else:
+                    context['student_errors'] = 'Error en el formulario.'
+        
+    return render(request, "malla/login.html", context)
+
+# Vista para registro de estudiantes
+def student_register(request):
+    context = {'register': True}
+    
+    if request.method == 'POST':
+        form = StudentRegistrationForm(request.POST)
+        if form.is_valid():
+            codigo = form.cleaned_data['codigo']
+            # Crear el nuevo estudiante
+            Student.objects.create(codigo=codigo)
+            # Mensaje de éxito
+            messages.success(request, f'¡Registro exitoso! Ya puedes iniciar sesión con el código {codigo}')
+            return redirect('malla:login')
+        else:
+            # Si hay errores en el formulario, mostrarlos
+            if form.errors.get('codigo'):
+                context['registration_errors'] = form.errors['codigo'][0]
+            else:
+                context['registration_errors'] = 'Error en el formulario.'
+    
+    return render(request, "malla/student_register.html", context)
 
 def logoutSession(request):
     if request.method == 'POST':
