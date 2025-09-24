@@ -17,9 +17,55 @@
     </div>
 </div>
 
-{% if recommended_subjects %}
+<!-- Mensajes informativos para estudiantes -->
+{% if messages %}
+<div class="container my-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 rounded-3 shadow-sm" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Mensaje especial para estudiantes de primer semestre -->
+{% if student_semester == 1 %}
+<div class="container my-4">
+    <div class="alert alert-warning border-0 rounded-3 shadow-sm" style="background-color: #fff3cd;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem; color: #856404;"></i>
+            <div>
+                <h5 class="alert-heading mb-1">¡Estás en primer semestre!</h5>
+                <p class="mb-0">No puedes ver recomendaciones hasta que apruebes las materias de primer semestre. Enfócate en completar las materias básicas primero.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Mensaje para estudiantes de semestres superiores -->
+{% if student_semester and student_semester > 1 and not show_recommendations %}
+<div class="container my-4">
+    <div class="alert alert-info border-0 rounded-3 shadow-sm" style="background-color: #e0d7ff;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-lightbulb-fill me-3" style="font-size: 1.5rem; color: #7b5fff;"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Selecciona tus materias completadas</h5>
+                <p class="mb-0">Marca las materias que ya has cursado haciendo clic en ellas. Esto nos ayudará a generar recomendaciones personalizadas para ti.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Sección de recomendaciones (solo si se deben mostrar) -->
+{% if show_recommendations and recommended_subjects %}
 <div class="container my-4 p-3 border rounded shadow-sm bg-white">
-    <h3 class="text-purple mb-3">Recomendaciones</h3>
+    <h3 class="text-purple mb-3">
+        <i class="bi bi-star-fill me-2"></i>Recomendaciones Personalizadas
+    </h3>
     <div class="d-flex flex-wrap gap-3 justify-content-start">
         {% for subject in recommended_subjects %}
         <div class="subject-box recommended {% if subject.completed %}completed{% elif not subject.is_enabled %}disabled{% endif %}"

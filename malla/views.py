@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.db import models
 from django.contrib import messages
 from .models import Semester, Subject, Student, Career
-from .forms import SubjectForm, SemesterForm, CareerCreateForm, StudentLoginForm, StudentRegistrationForm
+from .forms import SubjectForm, SemesterForm, CareerCreateForm, StudentLoginForm, StudentRegistrationForm, SemesterSelectionForm
 from .estructura.django_lista import ListaDjangoDobleEnlace
 
 # Vista del inicio de sesión
@@ -40,7 +40,13 @@ def login(request):
                     request.session['userType'] = 'student'
                     request.session['studentCode'] = codigo
                     request.session['studentId'] = student.id
-                    return redirect("/malla/full-curriculum/")
+                    
+                    # Verificar si es la primera vez que inicia sesión
+                    if not student.first_login_completed:
+                        request.session['first_time_login'] = True
+                        return redirect("/malla/semester-setup/")
+                    else:
+                        return redirect("/malla/full-curriculum/")
                 except Student.DoesNotExist:
                     context['student_errors'] = 'El código de estudiante no existe.'
             else:
@@ -79,6 +85,50 @@ def student_register(request):
     
     context['form'] = form
     return render(request, "malla/student_register.html", context)
+
+# Vista para configuración de semestre (primera vez)
+def semester_setup(request):
+    # Verificar que el usuario esté logueado y sea estudiante
+    isLogged = request.session.get("isLogged")
+    userType = request.session.get("userType")
+    studentId = request.session.get("studentId")
+    first_time_login = request.session.get("first_time_login")
+    
+    if not isLogged or userType != 'student' or not first_time_login:
+        return redirect("/malla/login/")
+    
+    try:
+        student = Student.objects.get(id=studentId)
+    except Student.DoesNotExist:
+        return redirect("/malla/login/")
+    
+    if request.method == 'POST':
+        form = SemesterSelectionForm(request.POST)
+        if form.is_valid():
+            current_semester = form.cleaned_data['current_semester']
+            
+            # Actualizar el estudiante
+            student.current_semester = current_semester
+            student.first_login_completed = True
+            student.save()
+            
+            # Limpiar la sesión de primera vez
+            request.session.pop('first_time_login', None)
+            
+            # Redirigir según el semestre
+            if current_semester == 1:
+                messages.info(request, 'No puedes ver recomendaciones hasta que apruebes las materias de primer semestre.')
+            else:
+                messages.info(request, 'Selecciona las materias que ya has visto para recibir recomendaciones personalizadas.')
+            
+            return redirect("/malla/full-curriculum/")
+    else:
+        form = SemesterSelectionForm()
+    
+    return render(request, "malla/semester_setup.html", {
+        'form': form,
+        'student': student
+    })
 
 def logoutSession(request):
     if request.method == 'POST':
@@ -257,6 +307,11 @@ def full_curriculum(request):
     isLogged = request.session.get("isLogged")
     userType = request.session.get("userType")
     
+    # Variables para controlar la lógica de recomendaciones
+    show_recommendations = True
+    student_semester = None
+    student = None
+    
     # Determinar qué carrera mostrar según el tipo de usuario
     if userType == 'student':
         # Si es estudiante, obtener su carrera específica
@@ -264,6 +319,11 @@ def full_curriculum(request):
         try:
             student = Student.objects.get(id=studentId)
             career = student.career if student.career else Career.objects.first()
+            student_semester = student.current_semester
+            
+            # Si está en primer semestre, no mostrar recomendaciones
+            if student_semester == 1:
+                show_recommendations = False
         except Student.DoesNotExist:
             career = Career.objects.first()
     else:
@@ -282,11 +342,23 @@ def full_curriculum(request):
         grupo_lista = ListaDjangoDobleEnlace()
         grupo_lista.from_list(list(group))
         grouped_semesters[key] = grupo_lista
-    # Las materias ya se ordenan en la propiedad ordered_subjects del modelo Semester
-    # Obtener materias recomendadas usando lista doblemente enlazada
-    recommended_subjects = Subject.lista_objects.recomendadas_as_lista(limite=5)
+    
+    # Obtener materias recomendadas solo si se deben mostrar
+    recommended_subjects = None
+    if show_recommendations:
+        recommended_subjects = Subject.lista_objects.recomendadas_as_lista(limite=5)
+    
     # Renderizar plantilla con semestres agrupados, recomendaciones y carrera
-    return render(request, 'malla/full_curriculum.html', {'grouped_semesters': grouped_semesters, 'recommended_subjects': recommended_subjects, 'career': career, 'isSuperUser': isSuperUser, 'isLogged': isLogged})
+    return render(request, 'malla/full_curriculum.html', {
+        'grouped_semesters': grouped_semesters, 
+        'recommended_subjects': recommended_subjects, 
+        'career': career, 
+        'isSuperUser': isSuperUser, 
+        'isLogged': isLogged,
+        'show_recommendations': show_recommendations,
+        'student_semester': student_semester,
+        'student': student
+    })
 
 # Vista para alternar el estado de completado de una materia (activar/desactivar)
 def toggle_subject(request, subject_id):

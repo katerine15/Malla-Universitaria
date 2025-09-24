@@ -122,3 +122,27 @@ class StudentRegistrationForm(forms.Form):
         if Student.objects.filter(codigo=codigo).exists():
             raise forms.ValidationError('Este código de estudiante ya está registrado.')
         return codigo
+
+# Formulario para selección de semestre (primera vez)
+class SemesterSelectionForm(forms.Form):
+    current_semester = forms.IntegerField(
+        label='¿En qué semestre te encuentras actualmente?',
+        min_value=1,
+        max_value=12,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ejemplo: 1, 2, 3...',
+            'min': '1',
+            'max': '12'
+        }),
+        help_text='Ingresa el número del semestre en el que te encuentras actualmente'
+    )
+
+    def clean_current_semester(self):
+        """
+        Validar que el semestre esté en un rango válido
+        """
+        semester = self.cleaned_data['current_semester']
+        if semester < 1 or semester > 12:
+            raise forms.ValidationError('El semestre debe estar entre 1 y 12.')
+        return semester

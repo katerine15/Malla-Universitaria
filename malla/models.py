@@ -32,13 +32,15 @@ class Student(models.Model):
     """
     codigo = models.CharField(max_length=20, unique=True, help_text='Código único del estudiante')
     career = models.ForeignKey(Career, on_delete=models.CASCADE, related_name='students', null=True, blank=True, help_text='Carrera del estudiante')
+    current_semester = models.PositiveIntegerField(null=True, blank=True, help_text='Semestre actual del estudiante')
+    first_login_completed = models.BooleanField(default=False, help_text='Indica si el estudiante ha completado la configuración inicial')
     created_at = models.DateTimeField(auto_now_add=True, help_text='Fecha de creación del registro')
 
     # Managers
     objects = models.Manager()  # Manager por defecto
 
     def __str__(self):
-        return f"Estudiante {self.codigo} - {self.career.name}"
+        return f"Estudiante {self.codigo} - {self.career.name if self.career else 'Sin carrera'}"
 
     class Meta:
         verbose_name = 'Estudiante'
